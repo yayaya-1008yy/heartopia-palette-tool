@@ -592,6 +592,23 @@
         ctx.lineTo(canvas.width, y * cellSize);
         ctx.stroke();
       }
+
+      ctx.strokeStyle = "rgba(0,0,0,0.5)";
+      ctx.lineWidth = 2;
+
+      for (let x = 0; x <= cols; x += 5) {
+        ctx.beginPath();
+        ctx.moveTo(x * cellSize, 0);
+        ctx.lineTo(x * cellSize, canvas.height);
+        ctx.stroke();
+      }
+
+      for (let y = 0; y <= rows; y += 5) {
+        ctx.beginPath();
+        ctx.moveTo(0, y * cellSize);
+        ctx.lineTo(canvas.width, y * cellSize);
+        ctx.stroke();
+      }
     }
 
     function drawSelectedNumberOnCell() {
@@ -872,6 +889,23 @@
       }
 
       for (let y = 0; y <= rows; y++) {
+        exportCtx.beginPath();
+        exportCtx.moveTo(0, y * cellSize);
+        exportCtx.lineTo(exportCanvas.width, y * cellSize);
+        exportCtx.stroke();
+      }
+
+      exportCtx.strokeStyle = "rgba(0,0,0,0.5)";
+      exportCtx.lineWidth = 2;
+
+      for (let x = 0; x <= cols; x += 5) {
+        exportCtx.beginPath();
+        exportCtx.moveTo(x * cellSize, 0);
+        exportCtx.lineTo(x * cellSize, exportCanvas.height);
+        exportCtx.stroke();
+      }
+
+      for (let y = 0; y <= rows; y += 5) {
         exportCtx.beginPath();
         exportCtx.moveTo(0, y * cellSize);
         exportCtx.lineTo(exportCanvas.width, y * cellSize);
