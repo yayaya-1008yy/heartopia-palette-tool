@@ -44,6 +44,14 @@
       padding: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       margin-bottom: 16px;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    .canvas-wrap.dragging {
+      cursor: grabbing;
     }
 
     canvas {
@@ -259,7 +267,7 @@
     </div>
 
     <div class="preview-wrap">
-      <div class="canvas-wrap">
+      <div class="canvas-wrap" id="canvasWrap">
         <strong>拡大表示</strong>
         <canvas id="canvas"></canvas>
         <div class="note" id="canvasNote">
@@ -329,10 +337,17 @@
     const usedColorsEl = document.getElementById("usedColors");
     const selectedInfoEl = document.getElementById("selectedInfo");
     const canvasNote = document.getElementById("canvasNote");
+    const canvasWrap = document.getElementById("canvasWrap");
 
     let loadedImage = null;
     let currentPixelData = [];
     let selectedCell = null;
+    let isDraggingCanvas = false;
+    let dragMoved = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let startScrollLeft = 0;
+    let startScrollTop = 0;
 
     const colorToCodeMap = {};
     const colorToGroupMap = {};
@@ -725,7 +740,76 @@
       renderPixelData();
     }
 
+    function startCanvasDrag(clientX, clientY) {
+      isDraggingCanvas = true;
+      dragMoved = false;
+      dragStartX = clientX;
+      dragStartY = clientY;
+      startScrollLeft = canvasWrap.scrollLeft;
+      startScrollTop = canvasWrap.scrollTop;
+      canvasWrap.classList.add("dragging");
+    }
+
+    function moveCanvasDrag(clientX, clientY) {
+      if (!isDraggingCanvas) return;
+
+      const dx = clientX - dragStartX;
+      const dy = clientY - dragStartY;
+
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        dragMoved = true;
+      }
+
+      canvasWrap.scrollLeft = startScrollLeft - dx;
+      canvasWrap.scrollTop = startScrollTop - dy;
+    }
+
+    function endCanvasDrag() {
+      isDraggingCanvas = false;
+      canvasWrap.classList.remove("dragging");
+    }
+
+    canvasWrap.addEventListener("mousedown", function(e) {
+      if (e.button !== 0) return;
+      startCanvasDrag(e.clientX, e.clientY);
+    });
+
+    window.addEventListener("mousemove", function(e) {
+      moveCanvasDrag(e.clientX, e.clientY);
+    });
+
+    window.addEventListener("mouseup", function() {
+      endCanvasDrag();
+    });
+
+    canvasWrap.addEventListener("mouseleave", function() {
+      if (!isDraggingCanvas) {
+        canvasWrap.classList.remove("dragging");
+      }
+    });
+
+    canvasWrap.addEventListener("touchstart", function(e) {
+      if (!e.touches || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      startCanvasDrag(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    canvasWrap.addEventListener("touchmove", function(e) {
+      if (!e.touches || e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      moveCanvasDrag(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    canvasWrap.addEventListener("touchend", function() {
+      endCanvasDrag();
+    });
+
     canvas.addEventListener("click", function(e) {
+      if (dragMoved) {
+        dragMoved = false;
+        return;
+      }
+
       const rect = canvas.getBoundingClientRect();
       const x = Math.floor((e.clientX - rect.left) / cellSize);
       const y = Math.floor((e.clientY - rect.top) / cellSize);
